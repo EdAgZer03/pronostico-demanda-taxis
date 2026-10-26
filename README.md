@@ -20,7 +20,7 @@ Transformé registros de diez minutos en una serie horaria, creé característic
 | Reducción de RMSE frente a la hora anterior | 30.1 % |
 | Horas evaluadas en prueba | 442 |
 
-Cumplí el objetivo de RMSE ≤ 48. Las tres cifras de prueba corresponden a las mismas 442 horas. La reducción relativa expresa una mejora del error predictivo; no representa una reducción medida de costos ni de tiempos de espera.
+Cumplí el objetivo de RMSE ≤ 48 y reduje el error frente a las dos referencias temporales. Comparé los tres pronósticos sobre las mismas 442 horas de prueba.
 
 ![Demanda observada y pronosticada](assets/pronostico_horario.png)
 
@@ -36,7 +36,7 @@ Cumplí el objetivo de RMSE ≤ 48. Las tres cifras de prueba corresponden a las
 
 La disponibilidad de conductores debe responder a cambios horarios en la demanda. Mi objetivo fue pronosticar el número de pedidos de la siguiente hora, usando información que ya estuviera disponible al emitir cada predicción.
 
-La evaluación avanza hora a hora: para predecir una hora utilizo las observaciones reales hasta la hora anterior, incluso dentro del tramo de prueba. No equivale a pronosticar varias jornadas completas desde un solo punto de origen.
+Actualicé el pronóstico hora a hora utilizando las observaciones reales disponibles hasta la hora anterior. Este esquema permite incorporar el historial reciente en cada nueva predicción.
 
 ## Decisiones técnicas
 
@@ -46,19 +46,17 @@ La evaluación avanza hora a hora: para predecir una hora utilizo las observacio
 4. **Selección mediante validación temporal.** Comparé 12 configuraciones de características con regresión lineal y después evalué regresión lineal, bosque aleatorio y LightGBM. Para cada ensamble probé nueve combinaciones con tres divisiones de `TimeSeriesSplit`.
 5. **Referencias comparables.** Evalué persistencia de una hora y persistencia diaria sobre las mismas fechas de validación y prueba que los modelos.
 
-## Validación
+## Evaluación temporal
 
-La serie horaria contiene **4416 observaciones**. El tramo inicial de entrenamiento contiene 3974 horas; después de formar las características quedaron 3950. Conservé las 442 horas finales para prueba, del **2018-08-13 14:00:00** al **2018-08-31 23:00:00**, en el horario registrado por el dataset.
+Dividí las **4416 observaciones horarias** en orden cronológico: 90 % para entrenamiento y 10 % para prueba. Dentro de entrenamiento utilicé tres divisiones de `TimeSeriesSplit`, siempre entrenando con las horas anteriores al intervalo de validación.
 
-En cada fold, todas las horas de entrenamiento preceden a las de validación. Elegí características, hiperparámetros y modelo utilizando desarrollo; no reajusté esas decisiones con las métricas de prueba. El error de validación reportado es el promedio de los RMSE de los tres folds.
-
-Ejecuté el notebook completo con las dependencias registradas. El tramo final coincide con el evaluado en el análisis inicial; repetirlo comprueba consistencia, pero no añade una evaluación independiente en otro período.
+Elegí las características y los hiperparámetros según el menor RMSE promedio de las tres divisiones. Con la configuración seleccionada evalué las **442 horas finales**, del **13 al 31 de agosto de 2018**, y comparé LightGBM con las referencias de la hora anterior y del día anterior.
 
 ## Análisis de errores
 
 ![Distribución de errores y ajuste de las predicciones](assets/errores_prueba.png)
 
-Observé que el pronóstico suaviza los picos más altos de demanda. El error medio observado menos predicho fue de 9.38 pedidos, lo que indica subestimación en promedio sobre la prueba. La distribución de errores complementa el RMSE: un promedio global no garantiza buen desempeño en todas las horas de alta demanda.
+El modelo siguió el patrón horario general, pero subestimó los picos más altos de demanda. En prueba, la diferencia media entre pedidos observados y predichos fue de **9.38 pedidos**, con errores positivos más grandes en las horas de mayor actividad.
 
 ## Datos
 
@@ -68,7 +66,7 @@ Si cuentas con los datos del ejercicio, configura `TAXI_DATA_PATH` o coloca el a
 
 ## Ejecutar localmente
 
-Entorno verificado: **Python 3.9.23 en Windows**, con pandas 1.2.4, scikit-learn 0.24.1, LightGBM 3.3.1 y statsmodels 0.13.5.
+**Requisitos:** Python 3.9.23 en Windows, pandas 1.2.4, scikit-learn 0.24.1, LightGBM 3.3.1 y statsmodels 0.13.5.
 
 Desde la raíz del repositorio:
 
@@ -82,7 +80,7 @@ python scripts/execute_notebook.py
 
 También puedes abrir el notebook en un editor compatible con Jupyter usando ese intérprete. El script usa un kernel temporal, ejecuta las celdas en orden y se detiene si encuentra un error.
 
-`requirements.txt` fija las dependencias principales. `requirements-lock.txt` registra sus dependencias transitivas en el entorno verificado. Para reproducir esta configuración utiliza Python 3.9.23. La compatibilidad con otras versiones de Python o sistemas operativos no se ha comprobado.
+`requirements.txt` contiene las dependencias principales y `requirements-lock.txt` sus dependencias transitivas. Utiliza Python 3.9.23 para instalar esta configuración.
 
 ## Limitaciones y siguientes pasos
 
