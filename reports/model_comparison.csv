@@ -1,0 +1,6 @@
+modelo,rmse_cv,tipo
+LightGBM,26.51322347210355,Modelo entrenado
+Bosque aleatorio,26.83691212844448,Modelo entrenado
+Regresión lineal,27.77310698267978,Modelo entrenado
+Misma hora del día anterior,33.199354372427145,Referencia temporal
+Hora anterior,37.984560413004225,Referencia temporal

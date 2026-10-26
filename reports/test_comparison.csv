@@ -1,0 +1,4 @@
+modelo,rmse_test
+LightGBM,41.12398143089034
+Hora anterior,58.856486242815066
+Misma hora del día anterior,57.187059099999075
